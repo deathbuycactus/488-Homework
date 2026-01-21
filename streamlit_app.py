@@ -1,6 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 import fitz
+
 # Show title and description.
 st.title("MY Document question answering")
 st.write(
@@ -13,12 +14,15 @@ st.write(
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
 openai_api_key = st.text_input("OpenAI API Key", type="password")
 
-def extract_text_from_pdf(pdf_path):
-    document = fitz.open(pdf_path)
-    text = ''
-    for page_num in range(len(document)):
-        page = document.load_page(page_num)
+def read_pdf(uploaded_file):
+    uploaded_file.seek(0)
+    pdf_bytes = uploaded_file.read()
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+
+    text = ""
+    for page in doc:
         text += page.get_text()
+
     return text
 
 if not openai_api_key:
@@ -39,11 +43,13 @@ else:
         placeholder="Can you give me a short summary?",
         disabled=not uploaded_file,
     )
-    
+    document = None
     # File type check
-    file_extension = uploaded_file.name.split('.')[-1]
+    if uploaded_file:
+        file_extension = uploaded_file.name.split('.')[-1].lower()
     if file_extension == 'txt':
-        document = uploaded_file.read().decode()
+        uploaded_file.seek(0)
+        document = uploaded_file.read().decode("utf-8")
     elif file_extension == 'pdf':
         document = read_pdf(uploaded_file)
     else:
