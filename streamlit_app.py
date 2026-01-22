@@ -1,7 +1,13 @@
 import streamlit as st
 from openai import OpenAI
-import fitz
+from PyPDF2 import PdfReader
 
+def read_pdf(file):
+    reader = PdfReader(file)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text()
+    return text
 # Show title and description.
 st.title("MY Document question answering")
 st.write(
@@ -13,17 +19,6 @@ st.write(
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
 # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
 openai_api_key = st.text_input("OpenAI API Key", type="password")
-
-def read_pdf(uploaded_file):
-    uploaded_file.seek(0)
-    pdf_bytes = uploaded_file.read()
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-
-    text = ""
-    for page in doc:
-        text += page.get_text()
-
-    return text
 
 if not openai_api_key:
     st.info("Please add your OpenAI API key to continue.", icon="🗝️")
@@ -46,11 +41,10 @@ else:
     document = None
 
 if uploaded_file:
-    file_extension = uploaded_file.name.split('.')[-1].lower()
+    file_extension = uploaded_file.name.split('.')[-1]
 
     if file_extension == 'txt':
-        uploaded_file.seek(0)
-        document = uploaded_file.read().decode("utf-8")
+        document = uploaded_file.read().decode()
 
     elif file_extension == 'pdf':
         document = read_pdf(uploaded_file)
