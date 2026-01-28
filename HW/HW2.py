@@ -21,6 +21,7 @@ if st.checkbox("Advanced Model"):
 else:
     st.write("Advanced Model: OFF")
     checkbox = False
+    
 # URL read function
 
 def read_url_content(url):
