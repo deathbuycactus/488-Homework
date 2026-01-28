@@ -10,10 +10,10 @@ st.write(
     "Choose in the sidebar whether the answer will be in 100 words, 2 connecting paragraphs, or in 5 bullet points."
 )
 
-lab_key = st.secrets["lab_key"]["IST488"]
+HW_key = st.secrets["HW_key"]["IST488"]
 
 # Create an OpenAI client.
-client = OpenAI(api_key=lab_key)
+client = OpenAI(api_key=HW_key)
 
 if st.checkbox("Advanced Model"):
     st.write("Advanced Model: ON")
