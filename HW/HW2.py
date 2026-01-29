@@ -8,8 +8,8 @@ import google.generativeai as genai
 # Show title and description.
 st.title("MY Document question answering")
 st.write(
-    "Upload a URL below and ask a question about it – an LLM will answer! "
-    "Choose in the sidebar whether the answer will be in 100 words, 2 connecting paragraphs, or in 5 bullet points."
+    "Upload a URL below and ask a question about it and choose an LLM will answer! "
+    "Choose in the sidebar what LLM to use, and whether the answer will be in 100 words, 2 connecting paragraphs, or in 5 bullet points."
 )
 
 if st.checkbox("Advanced Model"):
@@ -44,7 +44,7 @@ summary = st.sidebar.selectbox(
 
 LLM = st.sidebar.selectbox(
     "Which LLM would you like to use?",
-    ("OpenAI", "Gemini")
+    ("ChatGPT", "Gemini")
 )
 
 output_lang = st.selectbox(
@@ -52,7 +52,7 @@ output_lang = st.selectbox(
     ("English", "French", "Spanish")
 )
 # Api keys
-st.write("Secrets keys:", list(st.secrets.keys()))
+#st.write("Secrets keys:", list(st.secrets.keys()))
 HW_key = st.secrets["IST488"] # OpenAI Key
 Gemini_Key = st.secrets['IST488_G'] # Gemini Key
 
@@ -66,34 +66,28 @@ if URL and summary:
             "content": f"Here's a some content of a webpage: {content} \n\n---\n\n Respond in {output_lang} {summary}",
         }
     ]
-    if checkbox == True:
-        if LLM == "Gemini":
-            client = genai.Client(api_key=Gemini_Key)
-            model = "gemini-3-flash-preview"
-        else:
-            # Create an OpenAI client.
-            client = OpenAI(api_key=HW_key)
-            model = "gpt-5-nano"
-    # Generate an answer using the OpenAI API.
-        stream = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            stream=True,
-        )
-    else:
-        if LLM == "Gemini":
-            client = genai.Client(api_key=Gemini_Key)
-            model = "gemini-2.5-pro"
-        else:
-            # Create an OpenAI client.
-            client = OpenAI(api_key=HW_key)
-            model = "gpt-5-mini"
-            
+    if LLM == "ChatGPT":
+        client = OpenAI(api_key=HW_key)
+
+        model = "gpt-5-nano" if checkbox else "gpt-5-mini"
+
         stream = client.chat.completions.create(
             model=model,
             messages=messages,
             stream=True,
         )
 
-    # Stream the response to the app using `st.write_stream`.
-    st.write_stream(stream)
+        st.write_stream(stream)
+
+    elif LLM == "Gemini":
+        genai.configure(api_key=Gemini_Key)
+
+        model = (
+            "gemini-2.5-flash" if checkbox else "gemini-2.5-pro"
+        )
+
+        model = genai.GenerativeModel(model)
+
+        response = model.generate_content(messages[0]["content"])
+
+        st.write(response.text)
