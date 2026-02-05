@@ -13,7 +13,7 @@ else:
 
 # Create GPT Client
 if 'client' not in st.session_state:
-    api_key = st.secrets["lab_key"]["IST488"]
+    api_key = st.secrets["IST488"]
     st.session_state.client = OpenAI(api_key=api_key)
 
 if "messages" not in st.session_state:
