@@ -9,6 +9,17 @@ st.title("My HW 3 Question Answering Chatbot")
 
 LLM = st.sidebar.selectbox("Which Model?",
                             ("ChatGPT", "Gemini"))
+
+URL1 = URL1 = st.text_input(
+    "Enter a URL",
+    placeholder="https://example1.com"
+)
+
+URL2 = URL2 = st.text_input(
+    "Enter a URL",
+    placeholder="https://example2.com"
+)
+
 if LLM == "ChatGPT":
     model_choice = "gpt-4o-mini"
 else:
@@ -23,13 +34,17 @@ elif LLM == "Gemini" and 'client' not in st.session_state:
     genai.configure(api_key=api_key)
     st.session_state.client = genai.Client(api_key=api_key)
 
-    #model = genai.GenerativeModel(model_choice)
-
 if "messages" not in st.session_state:
     st.session_state["messages"] = [
         {
             "role": "system",
-            "content": "End first response: 'Do you want more information?' If they want more information continue asking if they want more until they so no and return to default prompt. Keep your answers simple enough such that a ten year old can understand them"
+            "content": f"""
+            You are a question-answering assistant.
+            You will answer questions that pertain to {URL1} and/or {URL2}. Do not forget the contents of these websites.
+            End first response: 'Do you want more information?' 
+            If they want more information continue asking if they want more until they so no and return to default prompt. 
+            Keep your answers simple enough such that a ten year old can understand them.
+             """
         },
         {
             "role": "assistant",
@@ -52,16 +67,6 @@ for msg in st.session_state.messages:
         continue
     chat_msg = st.chat_message(msg["role"])
     chat_msg.write(msg["content"])
-
-URL1 = URL1 = st.text_input(
-    "Enter a URL",
-    placeholder="https://example1.com"
-)
-
-URL2 = URL2 = st.text_input(
-    "Enter a URL",
-    placeholder="https://example2.com"
-)
 
 # Conversation buffer
 if prompt := st.chat_input("What is up?"):
