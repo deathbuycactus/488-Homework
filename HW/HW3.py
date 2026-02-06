@@ -1,8 +1,8 @@
 import streamlit as st
 from openai import OpenAI
+import google.generativeai as genai
 from bs4 import BeautifulSoup
 import requests
-from google import genai #import google.generativeai as genai
 
 # Show title and descr
 st.title("My HW 3 Question Answering Chatbot")
@@ -26,24 +26,28 @@ URL1 = URL1 = st.text_input(
     placeholder="https://example1.com"
 )
 
+URL1_content = read_url_content(URL1)
+
 URL2 = URL2 = st.text_input(
     "Enter a URL",
     placeholder="https://example2.com"
 )
 
+URL2_content = read_url_content(URL2)
+
+
 if LLM == "ChatGPT":
     model_choice = "gpt-4o-mini"
 else:
-    model_choice = "gemini-1.5-pro"
+    model_choice = "gemini-2.5-pro"
 
 # Create GPT Client
 if LLM == "ChatGPT" and 'client' not in st.session_state:
     api_key = st.secrets["IST488"]
     st.session_state.client = OpenAI(api_key=api_key)
-elif LLM == "Gemini" and 'client' not in st.session_state:
-    api_key = st.secrets["IST488_G"]
-    genai.configure(api_key=api_key)
-    st.session_state.client = genai.Client(api_key=api_key)
+if LLM == "Gemini":
+    genai.configure(api_key=st.secrets["IST488_G"])
+
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [
@@ -51,9 +55,9 @@ if "messages" not in st.session_state:
             "role": "system",
             "content": f"""
             You are a question-answering assistant.
-            You will answer questions that pertain to {URL1} and/or {URL2}. Do not forget the contents of these websites.
+            You will answer questions that pertain to {URL1_content} and/or {URL2_content}. Do not forget the contents of these websites.
             End first response: 'Do you want more information?' 
-            If they want more information continue asking if they want more until they so no, then summarize the conversation. 
+            If they want more information continue asking if they want more until they say no, then summarize the conversation. 
             Keep your answers simple enough such that a ten year old can understand them.
             If you reach 3 user-assistant exchanges, answer the user's question and provide a summary of the conversation as part of your response.
             """
@@ -90,7 +94,21 @@ if prompt := st.chat_input("What is up?"):
         st.session_state.messages.append({"role": "assistant", "content": response})
     elif LLM == "Gemini":
         model = genai.GenerativeModel(model_choice)
-        response = model.generate_content(prompt)
+        gemini_prompt = f"""
+            You are a question-answering assistant.
+
+            You will answer questions that pertain to {URL1_content} and/or {URL2_content}. Do not forget the contents of these websites.
+
+            Rules:
+            End first response: 'Do you want more information?' 
+            If they want more information continue asking if they want more until they say no, then summarize the conversation. 
+            Keep your answers simple enough such that a ten year old can understand them.
+            If you reach 3 user-assistant exchanges, answer the user's question and provide a summary of the conversation as part of your response.
+            
+            User question:
+            {prompt}
+            """
+        response = model.generate_content(gemini_prompt)
         assistant_text = response.text
         with st.chat_message("assistant"):
             st.write(assistant_text)
