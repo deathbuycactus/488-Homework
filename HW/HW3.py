@@ -59,7 +59,7 @@ if "messages" not in st.session_state:
             End first response: 'Do you want more information?' 
             If they want more information continue asking if they want more until they say no, then summarize the conversation. 
             Keep your answers simple enough such that a ten year old can understand them.
-            If you reach 3 user-assistant exchanges, answer the user's question and provide a summary of the conversation as part of your response.
+            If you reach 3 user-assistant exchanges, summarize the conversation so far, then replace the conversation history with that summary reponse.
             """
         },
         {
