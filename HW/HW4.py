@@ -1,6 +1,7 @@
 import sys
 from PyPDF2 import PdfReader
 from pathlib import Path
+import pysqlite3 as sqlite3
 
 # ChromaDB fix
 __import__('pysqlite3')
@@ -10,12 +11,13 @@ import streamlit as st
 from openai import OpenAI
 import chromadb
 
+
 # ==============================
 # Initialize OpenAI client
 # ==============================
 if 'openai_client' not in st.session_state:
     st.session_state.openai_client = OpenAI(
-        api_key=st.secrets["lab_key"]["IST488"]
+        api_key=st.secrets["IST488"]
     )
 
 # ==============================
@@ -74,8 +76,8 @@ if collection.count() == 0:
 # ==============================
 # Streamlit UI
 # ==============================
-st.title('Lab 4: Chatbot using RAG')
-st.write("This chatbot answers questions using your PDFs. External sources may be used if needed.")
+st.title('HW 4: Chatbot using RAG')
+st.write("This chatbot answers questions using a collection of HTML files. External sources may be used if needed.")
 
 LLM = st.sidebar.selectbox("Which Model?", ("ChatGPT",))
 model_choice = "gpt-4o-mini" if LLM == "ChatGPT" else None
