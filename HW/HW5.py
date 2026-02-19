@@ -54,7 +54,6 @@ def relative_club_info(query, n_results=3, call_llm=False):
     if not call_llm:
         return retrieved_text
 
-    # If we want the function to ALSO call the LLM
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -159,20 +158,13 @@ if prompt := st.chat_input("Ask a question:"):
 
     client = st.session_state.openai_client
 
-    # Step 1: Embed user question
-    query_embed = client.embeddings.create(
-        input=prompt,
-        model="text-embedding-3-small"
-    ).data[0].embedding
+    # Step 1: Embed user question -- Replaced with relevant_club_info call
+    #query_embed = client.embeddings.create(
+    #    input=prompt,
+    #    model="text-embedding-3-small"
+    #).data[0].embedding
 
-    # Step 2: Query ChromaDB
-    results = collection.query(
-        query_embeddings=[query_embed],
-        n_results=3
-    )
-
-    # Step 3: Combine retrieved documents
-    retrieved_text = "\n".join(results["documents"][0])
+    retrieved_text = relative_club_info(prompt)
 
     # Step 4: Inject context into messages
     context_message = {
