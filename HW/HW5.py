@@ -29,13 +29,42 @@ collection = chroma_client.get_or_create_collection('Lab4Collection')
 # ==============================
 # HTML Embedding Functions
 # ==============================
-def relative_club_info():
+def relative_club_info(query, n_results=3, call_llm=False):
+    """
+    Searches ChromaDB for relevant club info.
+    If call_llm=True, returns an LLM-generated answer using retrieved context.
+    Otherwise returns retrieved text only.
+    """
+    client = st.session_state.openai_client
 
+    # Embed query
+    embedding = client.embeddings.create(
+        input=query,
+        model="text-embedding-3-small"
+    ).data[0].embedding
 
+    # Search vector DB
+    results = st.session_state.Lab4_VectorDB.query(
+        query_embeddings=[embedding],
+        n_results=n_results
+    )
 
+    retrieved_text = "\n".join(results["documents"][0])
 
-    
-    return
+    if not call_llm:
+        return retrieved_text
+
+    # If we want the function to ALSO call the LLM
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "Answer using only this context:\n" + retrieved_text},
+            {"role": "user", "content": query}
+        ]
+    )
+
+    return response.choices[0].message.content
+
 def add_to_collection(collection, text, file_name):
     """Embed a html document and store in ChromaDB."""
     client = st.session_state.openai_client
@@ -83,7 +112,7 @@ if collection.count() == 0:
 # ==============================
 # Streamlit UI
 # ==============================
-st.title('HW 4: Chatbot using RAG')
+st.title('HW 5: Enhanced Chatbot using RAG')
 st.write("This chatbot answers questions using a collection of HTML files. External sources may be used if needed.")
 
 LLM = st.sidebar.selectbox("Which Model?", ("ChatGPT",))
