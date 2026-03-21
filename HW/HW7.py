@@ -79,9 +79,6 @@ def add_to_collection(collection, text, file_name):
         metadatas=[{"source": file_name}]
     )
 
-if __name__ == "__main__":
-    load_csv_to_chroma("news.csv")
-    print("✅ Vector DB built successfully.")
 # ==============================
 # Streamlit UI
 # ==============================
@@ -163,3 +160,5 @@ if prompt := st.chat_input("Ask a question:"):
     conversation = conversation[-MAX_INTERACTIONS*2:]
 
     st.session_state.messages = [system_msg] + conversation
+
+st.write(collection.count())
