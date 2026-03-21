@@ -10,7 +10,6 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import streamlit as st
 from openai import OpenAI
 import chromadb
-import pandas as pd
 
 # ==============================
 # Initialize OpenAI client
@@ -21,14 +20,22 @@ if 'openai_client' not in st.session_state:
     )
 
 # ==============================
-# Initialize ChromaDB
+# Load pre-built ChromaDB
 # ==============================
 chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_HW')
-collection = chroma_client.get_collection('HW7_Collection')
+
+try:
+    collection = chroma_client.get_collection('HW7_Collection')
+except chromadb.errors.NotFoundError:
+    st.error("❌ Collection 'HW7_Collection' not found in ChromaDB. Make sure the DB was built outside the app.")
+    st.stop()
+
+# Display number of articles for debug
+st.write(f"Number of articles in DB: {collection.count()}")
+
 # ==============================
 # HTML Embedding Functions
 # ==============================
-
 def relative_news_info(query, n_results=5, call_llm=False):
     """
     Searches ChromaDB for relevant news info.
@@ -49,6 +56,10 @@ def relative_news_info(query, n_results=5, call_llm=False):
         n_results=n_results
     )
 
+    # Handle empty results
+    if not results["documents"][0]:
+        return "No news articles found for your query."
+
     retrieved_text = "\n".join(results["documents"][0])
 
     if not call_llm:
@@ -64,26 +75,11 @@ def relative_news_info(query, n_results=5, call_llm=False):
 
     return response.choices[0].message.content
 
-def add_to_collection(collection, text, file_name):
-    """Embed a html document and store in ChromaDB."""
-    client = st.session_state.openai_client
-    query_embed = client.embeddings.create(
-        input=text,
-        model='text-embedding-3-small'
-    )
-    embedding = query_embed.data[0].embedding
-    collection.add(
-        documents=[text],
-        ids=[file_name],
-        embeddings=[embedding],
-        metadatas=[{"source": file_name}]
-    )
-
 # ==============================
 # Streamlit UI
 # ==============================
 st.title('HW 7: News Information Bot')
-st.write("This chatbot answers news related questions using a collection of articles in a CSV file.")
+st.write("This chatbot answers news related questions using a collection of articles in a CSV file (pre-loaded into ChromaDB).")
 
 LLM = st.sidebar.selectbox("Which Model?", ("ChatGPT",))
 model_choice = "gpt-4o-mini" if LLM == "ChatGPT" else None
@@ -100,7 +96,8 @@ if "messages" not in st.session_state:
             "role": "system",
             "content": (
                 "You are a question-answering assistant. "
-                "If the question cannot be answered using the content of the CSV file given, do not use external sources to answer and instead state your uncerntainty"            )
+                "If the question cannot be answered using the content of the CSV file given, do not use external sources to answer and instead state your uncertainty."
+            )
         },
         {
             "role": "assistant",
@@ -124,41 +121,33 @@ if prompt := st.chat_input("Ask a question:"):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    client = st.session_state.openai_client
-
-    # Step 1: Embed user question -- Replaced with relevant_club_info call
-    #query_embed = client.embeddings.create(
-    #    input=prompt,
-    #    model="text-embedding-3-small"
-    #).data[0].embedding
-
+    # Retrieve context from ChromaDB
     retrieved_text = relative_news_info(prompt)
 
-    # Step 4: Inject context into messages
+    # Inject context into messages
     context_message = {
         "role": "system",
         "content": f"Use this retrieved context to answer the user:\n{retrieved_text}"
     }
     messages_with_context = st.session_state.messages + [context_message]
 
-    # Step 5: Call GPT
-    stream = client.chat.completions.create(
+    # Call GPT
+    stream = st.session_state.openai_client.chat.completions.create(
         model=model_choice,
         messages=messages_with_context,
         stream=True
     )
 
-    # Step 6: Display GPT response
+    # Display GPT response
     with st.chat_message("assistant"):
         response = st.write_stream(stream)
+
+    # Save assistant message
     st.session_state.messages.append({"role": "assistant", "content": response})
+
+    # Keep last MAX_INTERACTIONS
     MAX_INTERACTIONS = 5
     system_msg = st.session_state.messages[0]
-
     conversation = st.session_state.messages[1:]
-
     conversation = conversation[-MAX_INTERACTIONS*2:]
-
     st.session_state.messages = [system_msg] + conversation
-
-st.write(collection.count())
