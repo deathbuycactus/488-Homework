@@ -6,9 +6,9 @@ pg = st.navigation({
         st.Page("HW/HW2.py", title="HW 2"),
         st.Page("HW/HW3.py", title="HW 3"),
         st.Page("HW/HW4.py", title="HW 4"),
-        st.Page("HW/HW5.py", title="HW 5", default=True),
+        st.Page("HW/HW5.py", title="HW 5"),
         st.Page("HW/HW6.py", title="HW 6"),
-        st.Page("HW/HW7.py", title="HW 7"),
+        st.Page("HW/HW7.py", title="HW 7", default=True),
         ]
     }
 )    
