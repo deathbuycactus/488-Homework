@@ -97,6 +97,7 @@ if "messages" not in st.session_state:
             "content": (
                 "You are a question-answering assistant. "
                 "If the question cannot be answered using the content of the CSV file given, do not use external sources to answer and instead state your uncertainty."
+                "Interesting news should return a ranked-order list of articles based on what was most recently reported on according to dates of the news in the CSV"
             )
         },
         {
