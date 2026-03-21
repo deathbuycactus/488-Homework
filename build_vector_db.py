@@ -1,9 +1,17 @@
+import sys
+import pysqlite3 as sqlite3
+
+# ChromaDB fix (same as Streamlit app)
+__import__('pysqlite3')
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 import chromadb
+import streamlit as st
 import pandas as pd
 from openai import OpenAI
 
 # Use your API key (env variable recommended)
-client = OpenAI(api_key="YOUR_API_KEY_HERE")
+client = OpenAI(api_key=st.secrets["IST488"])
 
 # SAME path as Streamlit app
 chroma_client = chromadb.PersistentClient(path='./ChromaDB_for_HW')
@@ -39,5 +47,5 @@ def load_csv_to_chroma(csv_path):
 
 
 if __name__ == "__main__":
-    load_csv_to_chroma("news.csv")
+    load_csv_to_chroma("ChromaDB_for_HW/news.csv")
     print("✅ Vector DB built successfully.")
