@@ -132,25 +132,20 @@ if prompt := st.chat_input("Ask a question:"):
 
     # Retrieve context from ChromaDB
     retrieved_text = relative_news_info(prompt)
-    # Detect "interesting news" queries
+    # Detect if user wants "interesting news"
     if "interesting" in prompt.lower():
         instruction = (
-            "Return a ranked list of the most recent and important news articles. "
-            "Explain briefly why each is interesting based on context."
+            "You are a news assistant. Return a ranked list of the most recent and important news articles. "
+            "Explain briefly why each is interesting based on the provided context."
         )
     else:
-        instruction = "Answer the user's question using ONLY the provided context."   
-    # Inject context into messages
-    messages_with_context = st.session_state.messages + [
-    {
-        "role": "system",
-        "content": instruction
-    },
-    {
-        "role": "assistant",
-        "content": f"Context:\n{retrieved_text}"
-    }
-]
+        instruction = "You are a news assistant. Answer the user's question using ONLY the provided context."
+
+    # Build messages for GPT
+    messages_with_context = [
+        {"role": "system", "content": instruction},
+        {"role": "user", "content": f"Question: {prompt}\n\nContext:\n{retrieved_text}"}
+    ]
 
     # Call GPT
     stream = st.session_state.openai_client.chat.completions.create(
