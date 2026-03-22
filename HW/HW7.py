@@ -1,22 +1,20 @@
 import sys
-from PyPDF2 import PdfReader
 from pathlib import Path
 import pysqlite3 as sqlite3
 
 # ChromaDB fix
-__import__('pysqlite3')
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 import streamlit as st
 from openai import OpenAI
 import chromadb
-
+import os 
 # ==============================
 # Initialize OpenAI client
 # ==============================
 if 'openai_client' not in st.session_state:
     st.session_state.openai_client = OpenAI(
-        api_key=st.secrets["IST488"]
+        api_key = os.getenv("OPENAI_API_KEY")
     )
 
 # ==============================
@@ -51,16 +49,28 @@ def relative_news_info(query, n_results=5, call_llm=False):
     ).data[0].embedding
 
     # Search vector DB
-    results = st.session_state.HW7_VectorDB.query(
-        query_embeddings=[embedding],
-        n_results=n_results
-    )
+    results = collection.query(
+    query_embeddings=[embedding],
+    n_results=n_results
+)
 
     # Handle empty results
     if not results["documents"][0]:
         return "No news articles found for your query."
 
-    retrieved_text = "\n".join(results["documents"][0])
+    docs = results["documents"][0]
+    metas = results["metadatas"][0]
+
+    # Sort documents by date (most recent first)
+    sorted_docs = [
+        doc for _, doc in sorted(
+            zip(metas, docs),
+            key=lambda x: x[0].get("date", ""),
+            reverse=True
+        )
+    ]
+
+    retrieved_text = "\n".join(sorted_docs)
 
     if not call_llm:
         return retrieved_text
@@ -95,9 +105,7 @@ if "messages" not in st.session_state:
         {
             "role": "system",
             "content": (
-                "You are a question-answering assistant. "
-                "If the question cannot be answered using the content of the CSV file given, do not use external sources to answer and instead state your uncertainty."
-                "Interesting news should return a ranked-order list of articles based on what was most recently reported on according to dates of the news in the CSV"
+                "You are a question-answering assistant. Only use provided context."
             )
         },
         {
@@ -124,13 +132,25 @@ if prompt := st.chat_input("Ask a question:"):
 
     # Retrieve context from ChromaDB
     retrieved_text = relative_news_info(prompt)
-
+    # Detect "interesting news" queries
+    if "interesting" in prompt.lower():
+        instruction = (
+            "Return a ranked list of the most recent and important news articles. "
+            "Explain briefly why each is interesting based on context."
+        )
+    else:
+        instruction = "Answer the user's question using ONLY the provided context."   
     # Inject context into messages
-    context_message = {
+    messages_with_context = st.session_state.messages + [
+    {
         "role": "system",
-        "content": f"Use this retrieved context to answer the user:\n{retrieved_text}"
+        "content": instruction
+    },
+    {
+        "role": "assistant",
+        "content": f"Context:\n{retrieved_text}"
     }
-    messages_with_context = st.session_state.messages + [context_message]
+]
 
     # Call GPT
     stream = st.session_state.openai_client.chat.completions.create(
