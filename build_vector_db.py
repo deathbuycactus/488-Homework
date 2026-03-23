@@ -11,7 +11,7 @@ import chromadb
 # ===========================
 # OpenAI client
 # ===========================
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = st.secrets.get("IST488")
 if not api_key:
     raise ValueError("OPENAI_API_KEY not set")
 
