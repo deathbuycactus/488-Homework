@@ -1,10 +1,5 @@
 import sys
 from pathlib import Path
-import pysqlite3 as sqlite3
-
-# ChromaDB fix
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-
 import streamlit as st
 from openai import OpenAI
 import chromadb
