@@ -2,11 +2,9 @@
 from pathlib import Path
 import pandas as pd
 from openai import OpenAI
-import streamlit as st  # Only for st.secrets
+import streamlit as st
 import os
 import sys
-import pysqlite3
-sys.modules["sqlite3"] = pysqlite3
 import chromadb
 # ===========================
 # OpenAI client

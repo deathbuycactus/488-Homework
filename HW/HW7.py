@@ -3,9 +3,6 @@ from pathlib import Path
 import streamlit as st
 from openai import OpenAI
 import os 
-
-import pysqlite3
-sys.modules["sqlite3"] = pysqlite3
 import chromadb
 
 # ==============================
