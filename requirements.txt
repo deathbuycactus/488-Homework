@@ -2,3 +2,4 @@ streamlit>=1.32
 openai
 chromadb
 pandas
+pysqlite3-binary==0.5.2

@@ -2,14 +2,18 @@ import sys
 from pathlib import Path
 import streamlit as st
 from openai import OpenAI
-import chromadb
 import os 
+
+import pysqlite3
+sys.modules["sqlite3"] = pysqlite3
+import chromadb
+
 # ==============================
 # Initialize OpenAI client
 # ==============================
 if 'openai_client' not in st.session_state:
     st.session_state.openai_client = OpenAI(
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = st.secrets['IST488']
     )
 
 # ==============================

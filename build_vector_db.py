@@ -1,15 +1,13 @@
 # build_vector_db.py
 from pathlib import Path
 import pandas as pd
-import sys
-import pysqlite3  # SQLite fix for ChromaDB
-
-# Patch sqlite3 before importing chromadb
-sys.modules['sqlite3'] = pysqlite3
-import chromadb
 from openai import OpenAI
 import streamlit as st  # Only for st.secrets
 import os
+import sys
+import pysqlite3
+sys.modules["sqlite3"] = pysqlite3
+import chromadb
 # ===========================
 # OpenAI client
 # ===========================
